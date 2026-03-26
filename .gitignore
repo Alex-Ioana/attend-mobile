@@ -1,0 +1,10 @@
+# Flutter/Dart (expand when the Flutter project is generated)
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+.idea/
+*.swp
+.DS_Store
