@@ -12,7 +12,8 @@ Flutter app for members and curators: live flows, QR-based presence, and offline
 
 ## Status
 
-Repository initialized with documentation, design reference image, and git; Flutter application scaffold is not present yet.
+**Phase 1 (Proof of Concept)** architecture has been established.
+The app currently runs using a **Mock API Data Layer** injected via Riverpod. This allows the UI shells (Clubber, Curator, Space) and the Glassmorphic design system to be tested locally.
 
 ## Target stack
 
@@ -20,13 +21,9 @@ Repository initialized with documentation, design reference image, and git; Flut
 - **Android:** primary development target first.
 - **iOS:** add on a Mac when ready for signing and store submission.
 
-## Setup (once Flutter project exists)
+## Running Locally (Phase 1 PoC)
 
-1. Install [Flutter](https://docs.flutter.dev/get-started/install) and Android toolchain.
-2. `flutter pub get`
-3. Run on an emulator or device per `flutter run`.
-
-## Notes
-
-- Proof of presence starts with short-lived venue QR challenges (backend is source of truth).
-- See `docs/design/app-design-proposal.jpg` for the current UI reference (dark); implement light theme alongside dark.
+1. Ensure Flutter is installed and an emulator/device is connected.
+2. Run `flutter pub get`.
+3. Run `dart run build_runner build -d` if you modify Freezed models.
+4. Run `flutter run` to launch the app.
