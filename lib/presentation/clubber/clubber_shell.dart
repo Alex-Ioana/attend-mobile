@@ -5,6 +5,7 @@ import '../../providers/event_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/curator_card.dart';
 import '../../shared/widgets/shoutout_card.dart';
+import 'package:go_router/go_router.dart';
 
 class ClubberTabNotifier extends Notifier<int> {
   @override
@@ -28,7 +29,7 @@ class ClubberShell extends ConsumerWidget {
         if (currentTab != 0) {
           ref.read(clubberTabProvider.notifier).setTab(0);
         } else {
-          ref.read(authStateProvider.notifier).logout();
+          context.go('/roles');
         }
       },
       child: Scaffold(
@@ -37,7 +38,7 @@ class ClubberShell extends ConsumerWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, size: 20, color: AppColors.darkTextSecondary),
           onPressed: () {
-            ref.read(authStateProvider.notifier).logout();
+            context.go('/roles');
           },
         ),
         title: const Text(

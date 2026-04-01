@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,11 +7,80 @@ import '../../providers/auth_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/glass_container.dart';
 
-class AuthScreen extends ConsumerWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends ConsumerState<AuthScreen> {
+  bool _isReviewerUnlocked = false;
+  Timer? _longPressTimer;
+
+  void _startTimer() {
+    _longPressTimer = Timer(const Duration(seconds: 3), () {
+      _showReviewerDialog();
+    });
+  }
+
+  void _cancelTimer() {
+    _longPressTimer?.cancel();
+  }
+
+  void _showReviewerDialog() {
+    final TextEditingController codeController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.darkSurfacePrimary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Reviewer Access', style: TextStyle(color: AppColors.darkTextPrimary)),
+          content: TextField(
+            controller: codeController,
+            style: const TextStyle(color: AppColors.darkTextPrimary),
+            decoration: const InputDecoration(
+              hintText: 'Enter access code',
+              hintStyle: TextStyle(color: AppColors.darkTextSecondary),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent)),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: AppColors.darkTextSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.cyanAccent,
+                foregroundColor: Colors.black,
+              ),
+              onPressed: () {
+                if (codeController.text == 'REV573441') {
+                  setState(() => _isReviewerUnlocked = true);
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Invalid code'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Verify'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
 
     ref.listen<AsyncValue<User?>>(authStateProvider, (previous, next) {
@@ -42,9 +112,7 @@ class AuthScreen extends ConsumerWidget {
                 right: 16,
                 child: IconButton(
                   icon: const Icon(Icons.settings, color: AppColors.darkTextSecondary),
-                  onPressed: () {
-                    // Settings handler
-                  },
+                  onPressed: () {},
                 ),
               ),
               Center(
@@ -58,30 +126,36 @@ class AuthScreen extends ConsumerWidget {
                         children: [
                           _CityStatsHeader(),
                           const SizedBox(height: 32),
-                          const Text(
-                            'ATTEND',
-                            style: TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 4,
-                              color: AppColors.darkTextPrimary,
+                          GestureDetector(
+                            onTapDown: (_) => _startTimer(),
+                            onTapUp: (_) => _cancelTimer(),
+                            onTapCancel: () => _cancelTimer(),
+                            child: const Text(
+                              'ATTEND',
+                              style: TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 4,
+                                color: AppColors.darkTextPrimary,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'Choose your role',
+                          Text(
+                            _isReviewerUnlocked ? 'Reviewer Mode Unlocked' : 'Log in to continue',
                             style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.darkTextSecondary,
+                              fontSize: 14,
+                              color: _isReviewerUnlocked ? Colors.cyanAccent : AppColors.darkTextSecondary,
+                              fontWeight: _isReviewerUnlocked ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
                           const SizedBox(height: 48),
                           if (authState is AsyncLoading)
                             const CircularProgressIndicator(color: AppColors.darkAccentElectric)
-                          else ...[
+                          else if (_isReviewerUnlocked) ...[
                             _RoleButton(
                               title: 'CLUBBER',
-                              subtitle: 'Discover events, follow curators, unlock perks',
+                              subtitle: 'Discover events, follow curators',
                               accentColor: Colors.cyanAccent,
                               onPressed: () => ref.read(authStateProvider.notifier).login(UserRole.clubber),
                             ),
@@ -100,6 +174,24 @@ class AuthScreen extends ConsumerWidget {
                               onPressed: () => ref.read(authStateProvider.notifier).login(UserRole.space),
                             ),
                           ]
+                          else ...[
+                            // Mock regular login buttons
+                            _SocialLoginButton(
+                              title: 'Continue with Google',
+                              icon: Icons.g_mobiledata,
+                              onPressed: () {
+                                context.go('/roles');
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            _SocialLoginButton(
+                              title: 'Continue with Apple',
+                              icon: Icons.apple,
+                              onPressed: () {
+                                context.go('/roles');
+                              },
+                            ),
+                          ]
                         ],
                       ),
                     ),
@@ -108,6 +200,50 @@ class AuthScreen extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SocialLoginButton extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _SocialLoginButton({
+    required this.title,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        decoration: BoxDecoration(
+          color: AppColors.darkSurfaceSecondary,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.darkSurfaceSecondary.withOpacity(0.5)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -163,7 +299,6 @@ class _CityStatsHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        // Mock Pulse Bar Chart
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(12, (index) {

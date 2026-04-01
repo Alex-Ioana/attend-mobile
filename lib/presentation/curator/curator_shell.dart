@@ -4,6 +4,7 @@ import '../../providers/auth_providers.dart';
 import '../../providers/event_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/shoutout_card.dart';
+import 'package:go_router/go_router.dart';
 
 class CuratorTabNotifier extends Notifier<int> {
   @override
@@ -28,7 +29,7 @@ class CuratorShell extends ConsumerWidget {
         if (currentTab != 0) {
           ref.read(curatorTabProvider.notifier).setTab(0);
         } else {
-          ref.read(authStateProvider.notifier).logout();
+          context.go('/roles');
         }
       },
       child: Scaffold(
@@ -36,7 +37,7 @@ class CuratorShell extends ConsumerWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, size: 20, color: AppColors.darkTextSecondary),
-          onPressed: () => ref.read(authStateProvider.notifier).logout(),
+          onPressed: () => context.go('/roles'),
         ),
         actions: [
           IconButton(

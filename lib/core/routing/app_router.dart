@@ -4,6 +4,7 @@ import '../../presentation/clubber/clubber_shell.dart';
 import '../../presentation/curator/curator_shell.dart';
 import '../../presentation/curator/public_curator_screen.dart';
 import '../../presentation/space/space_shell.dart';
+import '../../presentation/home/role_selection_screen.dart';
 import '../../domain/models/auth_models.dart';
 
 final appRouter = GoRouter(
@@ -12,6 +13,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/auth',
       builder: (context, state) => const AuthScreen(),
+    ),
+    GoRoute(
+      path: '/roles',
+      builder: (context, state) => const RoleSelectionScreen(),
     ),
     GoRoute(
       path: '/clubber',
